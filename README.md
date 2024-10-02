@@ -1,0 +1,2 @@
+# note-shtrikh
+Text processor
