@@ -19,12 +19,15 @@ public:
     ~MainWindow();
 
 private slots:
-    void openFile();
+    void openRtfFile();
+    void createRtfFile();
+    void saveRtfFile();
 
 private:
     Ui::MainWindow *ui;
-    QTextEdit *textEdit; // текстовый редактор
-    QPushButton *openButton; // кнопка "Открыть файл"
+    QTextEdit *textEdit;
+    QString currentRtfFileName;
+    QAction *saveRtfAction; // Добавлено: Указатель на действие "Сохранить .rtf"
 };
 
 #endif // MAINWINDOW_H

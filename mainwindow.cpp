@@ -1,40 +1,51 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QTextStream>
-#include <QVBoxLayout>
+#include <QMenuBar>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     textEdit(new QTextEdit(this)),
-    openButton(new QPushButton("Открыть файл", this)) // Создаем кнопку
+    currentRtfFileName("")
 {
     ui->setupUi(this);
 
-    // Устанавливаем основной компоновщик
-    QVBoxLayout *layout = new QVBoxLayout; // Компоновщик вертикального расположения
-    layout->addWidget(openButton); // Добавляем кнопку в компоновщик
-    layout->addWidget(textEdit); // Добавляем текстовый редактор в компоновщик
+    // Создание меню
+    QMenuBar *menuBar = new QMenuBar(this);
+    QMenu *fileMenu = new QMenu("Файл", this);
 
-    // Создаем виджет и устанавливаем компоновщик
-    QWidget *centralWidget = new QWidget(this);
-    centralWidget->setLayout(layout);
-    setCentralWidget(centralWidget);
+    QAction *openRtfAction = new QAction("Открыть .rtf", this);
+    QAction *createRtfAction = new QAction("Создать .rtf", this);
+    QAction *saveRtfAction = new QAction("Сохранить .rtf", this);
+    saveRtfAction->setEnabled(false); // Делаем неактивным до открытия или создания файла
 
-    // Скрываем текстовый редактор
-    textEdit->setVisible(false);
+    fileMenu->addAction(openRtfAction);
+    fileMenu->addAction(createRtfAction);
+    fileMenu->addAction(saveRtfAction);
 
-    // Подключаем сигнал кнопки к слоту
-    connect(openButton, &QPushButton::clicked, this, &MainWindow::openFile);
+    menuBar->addMenu(fileMenu);
+    setMenuBar(menuBar);
+
+    setCentralWidget(textEdit);
+    textEdit->setVisible(false); // Скрываем редактор текста в начале
+
+    // Подключение действий меню к слотам
+    connect(openRtfAction, &QAction::triggered, this, &MainWindow::openRtfFile);
+    connect(createRtfAction, &QAction::triggered, this, &MainWindow::createRtfFile);
+    connect(saveRtfAction, &QAction::triggered, this, &MainWindow::saveRtfFile);
+
+    this->saveRtfAction = saveRtfAction; // Сохраняем указатель на действие "Сохранить"
 }
 
 MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::openFile() {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;All Files (*)"));
+void MainWindow::openRtfFile() {
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Открыть .rtf файл"), "", tr("RTF Files (*.rtf);;All Files (*)"));
     if (!fileName.isEmpty()) {
         QFile file(fileName);
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -42,7 +53,46 @@ void MainWindow::openFile() {
             textEdit->setPlainText(in.readAll());
             file.close();
         }
-        // Показываем текстовый редактор после открытия файла
+        currentRtfFileName = fileName;
         textEdit->setVisible(true);
+
+        saveRtfAction->setEnabled(true); // Делаем доступной кнопку "Сохранить"
+    }
+}
+
+void MainWindow::createRtfFile() {
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Создать .rtf файл"), "", tr("RTF Files (*.rtf);;All Files (*)"));
+    if (!fileName.isEmpty()) {
+        QFile file(fileName);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            file.close(); // Создаем пустой файл
+        } else {
+            QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось создать файл."));
+        }
+        textEdit->clear();
+        currentRtfFileName = fileName;
+        textEdit->setVisible(true);
+
+        saveRtfAction->setEnabled(true); // Делаем доступной кнопку "Сохранить"
+    }
+}
+
+void MainWindow::saveRtfFile() {
+    if (currentRtfFileName.isEmpty()) {
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Сохранить .rtf файл"), "", tr("RTF Files (*.rtf);;All Files (*)"));
+        if (!fileName.isEmpty()) {
+            currentRtfFileName = fileName;
+        } else {
+            return;
+        }
+    }
+
+    QFile file(currentRtfFileName);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << textEdit->toPlainText();
+        file.close();
+    } else {
+        QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось сохранить файл."));
     }
 }
