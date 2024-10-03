@@ -1,2 +1,2 @@
-# note-shtrikh
+# SigmaEdit
 Text processor
