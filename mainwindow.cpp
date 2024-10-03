@@ -4,40 +4,64 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QMenuBar>
+#include <QInputDialog>
+#include <QClipboard>
+#include <QApplication> // Для QClipboard
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     textEdit(new QTextEdit(this)),
-    currentRtfFileName("")
+    currentRtfFileName(""),
+    previousText("") // Инициализация
 {
     ui->setupUi(this);
 
     // Создание меню
     QMenuBar *menuBar = new QMenuBar(this);
     QMenu *fileMenu = new QMenu("Файл", this);
+    QMenu *editMenu = new QMenu("Правка", this); // Меню для редактирования
 
     QAction *openRtfAction = new QAction("Открыть .rtf", this);
     QAction *createRtfAction = new QAction("Создать .rtf", this);
-    QAction *saveRtfAction = new QAction("Сохранить .rtf", this);
-    saveRtfAction->setEnabled(false); // Делаем неактивным до открытия или создания файла
+    saveRtfAction = new QAction("Сохранить .rtf", this);
+    saveRtfAction->setEnabled(false); // Неактивное до открытия или создания файла
+
+    QAction *findAction = new QAction("Найти", this);      // Поиск
+    QAction *replaceAction = new QAction("Заменить", this); // Замена
+    QAction *clearAction = new QAction("Очистить", this);   // Очистка
+    QAction *undoAction = new QAction("Вернуть", this);     // Вернуть
+    QAction *copyAction = new QAction("Копировать", this);   // Копировать
+    QAction *pasteAction = new QAction("Вставить", this);    // Вставить
 
     fileMenu->addAction(openRtfAction);
     fileMenu->addAction(createRtfAction);
     fileMenu->addAction(saveRtfAction);
 
+    editMenu->addAction(findAction);
+    editMenu->addAction(replaceAction);
+    editMenu->addAction(clearAction);  // Добавляем действие очистки
+    editMenu->addAction(undoAction);   // Добавляем действие возврата
+    editMenu->addAction(copyAction);    // Добавляем действие копирования
+    editMenu->addAction(pasteAction);   // Добавляем действие вставки
+
     menuBar->addMenu(fileMenu);
+    menuBar->addMenu(editMenu);  // Добавляем меню редактирования
     setMenuBar(menuBar);
 
     setCentralWidget(textEdit);
-    textEdit->setVisible(false); // Скрываем редактор текста в начале
+    textEdit->setVisible(false); // Скрываем редактор в начале
 
     // Подключение действий меню к слотам
     connect(openRtfAction, &QAction::triggered, this, &MainWindow::openRtfFile);
     connect(createRtfAction, &QAction::triggered, this, &MainWindow::createRtfFile);
     connect(saveRtfAction, &QAction::triggered, this, &MainWindow::saveRtfFile);
-
-    this->saveRtfAction = saveRtfAction; // Сохраняем указатель на действие "Сохранить"
+    connect(findAction, &QAction::triggered, this, &MainWindow::findText);     // Подключение поиска
+    connect(replaceAction, &QAction::triggered, this, &MainWindow::replaceText); // Подключение замены
+    connect(clearAction, &QAction::triggered, this, &MainWindow::clearText);   // Подключение очистки
+    connect(undoAction, &QAction::triggered, this, &MainWindow::undoText);     // Подключение возврата
+    connect(copyAction, &QAction::triggered, this, &MainWindow::copyText);     // Подключение копирования
+    connect(pasteAction, &QAction::triggered, this, &MainWindow::pasteText);   // Подключение вставки
 }
 
 MainWindow::~MainWindow() {
@@ -55,7 +79,6 @@ void MainWindow::openRtfFile() {
         }
         currentRtfFileName = fileName;
         textEdit->setVisible(true);
-
         saveRtfAction->setEnabled(true); // Делаем доступной кнопку "Сохранить"
     }
 }
@@ -72,7 +95,6 @@ void MainWindow::createRtfFile() {
         textEdit->clear();
         currentRtfFileName = fileName;
         textEdit->setVisible(true);
-
         saveRtfAction->setEnabled(true); // Делаем доступной кнопку "Сохранить"
     }
 }
@@ -95,4 +117,74 @@ void MainWindow::saveRtfFile() {
     } else {
         QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось сохранить файл."));
     }
+}
+
+void MainWindow::findText() {
+    bool ok;
+    QString searchText = QInputDialog::getText(this, tr("Поиск"), tr("Введите текст для поиска:"), QLineEdit::Normal, "", &ok);
+
+    if (ok && !searchText.isEmpty()) {
+        // Приводим текст для поиска и документ к нижнему регистру для регистронезависимого поиска
+        QString lowerSearchText = searchText.toLower();
+        QString lowerDocumentText = textEdit->toPlainText().toLower();
+
+        int index = lowerDocumentText.indexOf(lowerSearchText);
+
+        if (index != -1) {
+            // Создаем курсор и устанавливаем его на найденный текст
+            QTextCursor cursor = textEdit->textCursor();
+            cursor.setPosition(index);
+            cursor.setPosition(index + searchText.length(), QTextCursor::KeepAnchor); // Выделяем найденное словосочетание
+
+            textEdit->setTextCursor(cursor); // Устанавливаем курсор на найденный текст
+            textEdit->ensureCursorVisible(); // Прокручиваем текст для видимости
+        } else {
+            QMessageBox::information(this, tr("Результаты поиска"), tr("Текст не найден."));
+        }
+    }
+}
+
+void MainWindow::replaceText() {
+    bool ok;
+    QString searchText = QInputDialog::getText(this, tr("Замена"), tr("Введите текст для поиска:"), QLineEdit::Normal, "", &ok);
+    if (ok && !searchText.isEmpty()) {
+        QString replaceText = QInputDialog::getText(this, tr("Замена"), tr("Введите текст для замены:"), QLineEdit::Normal, "", &ok);
+        if (ok) {
+            QString content = textEdit->toPlainText();
+            content.replace(searchText, replaceText);
+            textEdit->setPlainText(content);
+        }
+    }
+}
+
+void MainWindow::clearText() {
+    // Сохраняем текущее состояние текста перед очисткой
+    previousText = textEdit->toPlainText();
+    textEdit->clear();
+}
+
+void MainWindow::undoText() {
+    // Возвращаемся к предыдущему состоянию текста, если оно сохранено
+    if (!previousText.isEmpty()) {
+        textEdit->setPlainText(previousText);
+        previousText.clear(); // Очищаем предыдущий текст после возврата
+    } else {
+        QMessageBox::information(this, tr("Ошибка"), tr("Нет текста для возврата."));
+    }
+}
+
+// Функция копирования текста в буфер обмена
+void MainWindow::copyText() {
+    QString selectedText = textEdit->textCursor().selectedText();
+    if (!selectedText.isEmpty()) {
+        QClipboard *clipboard = QApplication::clipboard();
+        clipboard->setText(selectedText);
+    }
+}
+
+// Функция вставки текста из буфера обмена
+void MainWindow::pasteText() {
+    QClipboard *clipboard = QApplication::clipboard();
+    QString clipboardText = clipboard->text();
+    textEdit->insertPlainText(clipboardText);
 }
