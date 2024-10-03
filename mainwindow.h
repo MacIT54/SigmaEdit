@@ -2,21 +2,32 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTextEdit>
+#include <QTableWidget>
+#include <QPushButton>
 
-namespace Ui {
-class MainWindow;
-}
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private slots:
+    void openRtfFile();
+    void createRtfFile();
+    void saveRtfFile();
 
 private:
     Ui::MainWindow *ui;
+    QTextEdit *textEdit;
+    QString currentRtfFileName;
+    QAction *saveRtfAction; // Добавлено: Указатель на действие "Сохранить .rtf"
 };
 
 #endif // MAINWINDOW_H
