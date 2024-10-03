@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QMenuBar>
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -16,28 +17,36 @@ MainWindow::MainWindow(QWidget *parent) :
     // Создание меню
     QMenuBar *menuBar = new QMenuBar(this);
     QMenu *fileMenu = new QMenu("Файл", this);
+    QMenu *editMenu = new QMenu("Правка", this); // Меню для редактирования
 
     QAction *openRtfAction = new QAction("Открыть .rtf", this);
     QAction *createRtfAction = new QAction("Создать .rtf", this);
-    QAction *saveRtfAction = new QAction("Сохранить .rtf", this);
-    saveRtfAction->setEnabled(false); // Делаем неактивным до открытия или создания файла
+    saveRtfAction = new QAction("Сохранить .rtf", this);
+    saveRtfAction->setEnabled(false); // Неактивное до открытия или создания файла
+
+    QAction *findAction = new QAction("Найти", this);      // Поиск
+    QAction *replaceAction = new QAction("Заменить", this); // Замена
 
     fileMenu->addAction(openRtfAction);
     fileMenu->addAction(createRtfAction);
     fileMenu->addAction(saveRtfAction);
 
+    editMenu->addAction(findAction);
+    editMenu->addAction(replaceAction);
+
     menuBar->addMenu(fileMenu);
+    menuBar->addMenu(editMenu);  // Добавляем меню редактирования
     setMenuBar(menuBar);
 
     setCentralWidget(textEdit);
-    textEdit->setVisible(false); // Скрываем редактор текста в начале
+    textEdit->setVisible(false); // Скрываем редактор в начале
 
     // Подключение действий меню к слотам
     connect(openRtfAction, &QAction::triggered, this, &MainWindow::openRtfFile);
     connect(createRtfAction, &QAction::triggered, this, &MainWindow::createRtfFile);
     connect(saveRtfAction, &QAction::triggered, this, &MainWindow::saveRtfFile);
-
-    this->saveRtfAction = saveRtfAction; // Сохраняем указатель на действие "Сохранить"
+    connect(findAction, &QAction::triggered, this, &MainWindow::findText);     // Подключение поиска
+    connect(replaceAction, &QAction::triggered, this, &MainWindow::replaceText); // Подключение замены
 }
 
 MainWindow::~MainWindow() {
@@ -94,5 +103,45 @@ void MainWindow::saveRtfFile() {
         file.close();
     } else {
         QMessageBox::warning(this, tr("Ошибка"), tr("Не удалось сохранить файл."));
+    }
+}
+
+void MainWindow::findText() {
+    bool ok;
+    QString searchText = QInputDialog::getText(this, tr("Поиск"), tr("Введите текст для поиска:"), QLineEdit::Normal, "", &ok);
+
+    if (ok && !searchText.isEmpty()) {
+        // Приводим текст для поиска и документ к нижнему регистру для регистронезависимого поиска
+        QString lowerSearchText = searchText.toLower();
+        QString lowerDocumentText = textEdit->toPlainText().toLower();
+
+        int index = lowerDocumentText.indexOf(lowerSearchText);
+
+        if (index != -1) {
+            // Создаем курсор и устанавливаем его на найденный текст
+            QTextCursor cursor = textEdit->textCursor();
+            cursor.setPosition(index);
+            cursor.setPosition(index + searchText.length(), QTextCursor::KeepAnchor); // Выделяем найденное словосочетание
+
+            textEdit->setTextCursor(cursor); // Устанавливаем курсор на найденный текст
+            textEdit->ensureCursorVisible(); // Прокручиваем текст для видимости
+        } else {
+            QMessageBox::information(this, tr("Результаты поиска"), tr("Текст не найден."));
+        }
+    }
+}
+
+
+
+void MainWindow::replaceText() {
+    bool ok;
+    QString searchText = QInputDialog::getText(this, tr("Замена"), tr("Введите текст для поиска:"), QLineEdit::Normal, "", &ok);
+    if (ok && !searchText.isEmpty()) {
+        QString replaceText = QInputDialog::getText(this, tr("Замена"), tr("Введите текст для замены:"), QLineEdit::Normal, "", &ok);
+        if (ok) {
+            QString content = textEdit->toPlainText();
+            content.replace(searchText, replaceText);
+            textEdit->setPlainText(content);
+        }
     }
 }

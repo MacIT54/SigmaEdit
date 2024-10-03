@@ -22,6 +22,8 @@ private slots:
     void openRtfFile();
     void createRtfFile();
     void saveRtfFile();
+    void findText();       // Новый слот для поиска текста
+    void replaceText();    // Новый слот для замены текста
 
 private:
     Ui::MainWindow *ui;
