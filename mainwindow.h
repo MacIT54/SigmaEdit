@@ -3,8 +3,7 @@
 
 #include <QMainWindow>
 #include <QTextEdit>
-#include <QStack>
-#include <QFile> // Для работы с файлами
+#include <QSettings>  // Добавлено для работы с настройками
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,18 +22,28 @@ private slots:
     void saveRtfFile();
     void findText();
     void replaceText();
-    void clearText();  // Слот для очистки текста
-    void undoText();   // Слот для восстановления текста
-    void copyText();   // Слот для копирования текста
-    void pasteText();  // Слот для вставки текста
+    void clearText();
+    void undoText();
+    void copyText();
+    void pasteText();
+    void onTextChanged(); // Слот для отслеживания изменений текста
+    void insertTable();  // Объявляем функцию insertTable
+    QString createTableHtml(int rows, int col);
+
+private:
+    void loadSettings();  // Загрузить настройки
+    void saveSettings();  // Сохранить настройки
+    void closeEvent(QCloseEvent *event) override; // Переопределение события закрытия окна
 
 private:
     Ui::MainWindow *ui;
     QTextEdit *textEdit;
     QString currentRtfFileName;
-    QString tempFileName; // Путь к временному файлу
-    QAction *saveRtfAction;
-    QStack<QString> textStack; // Стек для хранения состояний текста
+    QString tempFileName;
+    bool isTextChanged;  // Флаг для отслеживания изменений текста
+    QAction *saveRtfAction;  // Указатель на действие сохранения
+    int cellPadding;
 };
+
 
 #endif // MAINWINDOW_H
