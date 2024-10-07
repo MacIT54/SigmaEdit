@@ -3,7 +3,8 @@
 
 #include <QMainWindow>
 #include <QTextEdit>
-#include <QStack> // Добавляем QStack для хранения состояний текста
+#include <QStack>
+#include <QFile> // Для работы с файлами
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,17 +23,17 @@ private slots:
     void saveRtfFile();
     void findText();
     void replaceText();
-    void clearText();  // Новый слот для очистки текста
-    void undoText();   // Новый слот для возврата к предыдущему состоянию
-    void copyText();   // Новый слот для копирования текста
-    void pasteText();  // Новый слот для вставки текста
+    void clearText();  // Слот для очистки текста
+    void undoText();   // Слот для восстановления текста
+    void copyText();   // Слот для копирования текста
+    void pasteText();  // Слот для вставки текста
 
 private:
     Ui::MainWindow *ui;
     QTextEdit *textEdit;
     QString currentRtfFileName;
-    QString previousText; // Переменная для хранения предыдущего текста
-    QAction *saveRtfAction; // Объявление переменной для действия "Сохранить .rtf"
+    QString tempFileName; // Путь к временному файлу
+    QAction *saveRtfAction;
     QStack<QString> textStack; // Стек для хранения состояний текста
 };
 
