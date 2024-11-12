@@ -36,6 +36,7 @@ private slots:
     void insertTable();
     void openFile(const QString &fileName);
 
+
 private:
     void loadSettings();
     void saveSettings();

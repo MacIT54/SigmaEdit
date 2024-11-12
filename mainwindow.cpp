@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     loadSettings();
-
+    textEdit->setTextColor(QColorConstants::Black);
     // Подключение слота отслеживания изменений текста
     connect(textEdit, &QTextEdit::textChanged, this, &MainWindow::onTextChanged);
 
@@ -76,38 +76,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QAction *insertTableAction = new QAction(QIcon::fromTheme("insert-table", style()->standardIcon(QStyle::SP_DialogApplyButton)), tr("Вставить таблицу"), this);
     connect(insertTableAction, &QAction::triggered, this, &MainWindow::insertTable);
 
-
-    fileMenu->addAction(openRtfAction);
-    fileMenu->addAction(createRtfAction);
-    fileMenu->addAction(saveRtfAction);
-
-    editMenu->addAction(findAction);
-    editMenu->addAction(replaceAction);
-    editMenu->addAction(clearAction);
-    editMenu->addAction(undoAction);
-    editMenu->addAction(copyAction);
-    editMenu->addAction(pasteAction);
-    editMenu->addAction(insertTableAction);
-
-    menuBar->addMenu(fileMenu);
-    menuBar->addMenu(editMenu);
-    setMenuBar(menuBar);
-
-    // Панель инструментов с иконками
-    QToolBar *toolBar = addToolBar("Основные действия");
-    toolBar->addAction(openRtfAction);
-    toolBar->addAction(createRtfAction);
-    toolBar->addAction(saveRtfAction);
-    toolBar->addSeparator();
-    toolBar->addAction(findAction);
-    toolBar->addAction(replaceAction);
-    toolBar->addAction(clearAction);
-    toolBar->addSeparator();
-    toolBar->addAction(undoAction);
-    toolBar->addAction(copyAction);
-    toolBar->addAction(pasteAction);
-    toolBar->addAction(insertTableAction);
-
     setCentralWidget(textEdit);
     textEdit->setVisible(false);
 
@@ -124,6 +92,18 @@ MainWindow::MainWindow(QWidget *parent) :
     controlPanel->addWidget(new QLabel("Размер шрифта:"));
     controlPanel->addWidget(fontSizeComboBox);
 
+
+    connect(ui->openRtfAction, &QAction::triggered, this, &MainWindow::openRtfFile);
+    connect(ui->createRtfAction, &QAction::triggered, this, &MainWindow::createRtfFile);
+    connect(ui->saveRtfAction, &QAction::triggered, this, &MainWindow::saveRtfFile);
+    connect(ui->findAction, &QAction::triggered, this, &MainWindow::findText);
+    connect(ui->replaceAction, &QAction::triggered, this, &MainWindow::replaceText);
+    connect(ui->clearAction, &QAction::triggered, this, &MainWindow::clearText);
+    connect(ui->undoAction, &QAction::triggered, this, &MainWindow::undoText);
+    connect(ui->copyAction, &QAction::triggered, this, &MainWindow::copyText);
+    connect(ui->pasteAction, &QAction::triggered, this, &MainWindow::pasteText);
+    connect(ui->insertTableAction, &QAction::triggered, this, &MainWindow::insertTable);
+
     // Кнопка для выбора цвета
     QPushButton *colorButton = new QPushButton("Выбрать цвет", this);
     connect(colorButton, &QPushButton::clicked, this, [this]() {
@@ -136,31 +116,17 @@ MainWindow::MainWindow(QWidget *parent) :
     controlPanel->addWidget(new QLabel("Цветовая схема:"));
     controlPanel->addWidget(colorButton);
 
+
+
     // Выбор отступов в ячейках (пока не реализовано)
     QSpinBox *paddingSpinBox = new QSpinBox(this);
     paddingSpinBox->setRange(0, 50);
     paddingSpinBox->setValue(0);
 
-    connect(paddingSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int padding) {
-        cellPadding = padding; // Сохраняем значение отступа
-    });
-
     controlPanel->addWidget(new QLabel("Отступы в ячейках:"));
     controlPanel->addWidget(paddingSpinBox);
 
-    // Подключение сигналов к слотам
-    connect(openRtfAction, &QAction::triggered, this, &MainWindow::openRtfFile);
-    connect(createRtfAction, &QAction::triggered, this, &MainWindow::createRtfFile);
-    connect(saveRtfAction, &QAction::triggered, this, &MainWindow::saveRtfFile);
-    connect(findAction, &QAction::triggered, this, &MainWindow::findText);
-    connect(replaceAction, &QAction::triggered, this, &MainWindow::replaceText);
-    connect(clearAction, &QAction::triggered, this, &MainWindow::clearText);
-    connect(undoAction, &QAction::triggered, this, &MainWindow::undoText);
-    connect(copyAction, &QAction::triggered, this, &MainWindow::copyText);
-    connect(pasteAction, &QAction::triggered, this, &MainWindow::pasteText);
-    connect(insertTableAction, &QAction::triggered, this, &MainWindow::insertTable);
 
-    loadSettings();
 }
 
 MainWindow::~MainWindow() {
@@ -178,12 +144,12 @@ void MainWindow::insertTable() {
             for (int i = 0; i < rows; ++i) {
                 tableHtml += "<tr>";
                 for (int j = 0; j < cols; ++j) {
-                    tableHtml += QString("<td style='padding: %10px; border: 10px solid black;'></td>").arg(cellPadding);
+                    tableHtml += QString("<td style='padding: %40px; border: 2px solid black; color: Black;'></td>").arg(cellPadding);
                 }
                 tableHtml += "</tr>";
             }
             tableHtml += "</table>";
-            textEdit->append(tableHtml);
+            textEdit->insertHtml(tableHtml); // Используем insertHtml
         }
     }
 }
@@ -193,7 +159,7 @@ QString MainWindow::createTableHtml(int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
         htmlTable += "<tr>";
         for (int j = 0; j < cols; ++j) {
-            htmlTable += "<td> </td>";
+            htmlTable += "<td style='padding: 20px;'> </td>";
         }
         htmlTable += "</tr>";
     }
@@ -207,18 +173,20 @@ void MainWindow::openRtfFile() {
         QFile file(fileName);
         if (file.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream in(&file);
-            textEdit->setHtml(in.readAll());  // Измените на setHtml
+            QString content = in.readAll();
+            textEdit->setHtml(content);  // Убедитесь, что ваш RTF-контент корректен для HTML
+            // Установка цвета и размера шрифта после загрузки
+            textEdit->setTextColor(Qt::black);  // Установите цвет текста, если нужно
             currentRtfFileName = fileName;
             isTextChanged = false;
             saveRtfAction->setEnabled(true);
-            textEdit->setVisible(true); // Показать QTextEdit
+            textEdit->setVisible(true);
             file.close();
         } else {
             QMessageBox::warning(this, "Ошибка", "Не удалось открыть файл.");
         }
     }
 }
-
 
 void MainWindow::createRtfFile() {
     QString fileName = QFileDialog::getSaveFileName(this, "Создать файл .rtf", "", "Файлы .rtf (*.rtf);;Все файлы (*)");
@@ -228,6 +196,8 @@ void MainWindow::createRtfFile() {
         if (file.open(QFile::WriteOnly)) {
             currentRtfFileName = fileName;
             textEdit->clear();  // Очистить текстовое поле для нового файла
+            textEdit->setFontPointSize(12);  // Установите размер шрифта по умолчанию
+            textEdit->setTextColor(Qt::black); // Установите цвет текста по умолчанию
             isTextChanged = false;
             saveRtfAction->setEnabled(true);
             textEdit->setVisible(true); // Показать QTextEdit
@@ -237,7 +207,6 @@ void MainWindow::createRtfFile() {
         }
     }
 }
-
 
 void MainWindow::saveRtfFile() {
     if (currentRtfFileName.isEmpty()) {
@@ -257,8 +226,6 @@ void MainWindow::saveRtfFile() {
     }
 }
 
-
-
 void MainWindow::findText() {
     bool ok;
     QString searchText = QInputDialog::getText(this, "Найти текст", "Введите текст для поиска:", QLineEdit::Normal, "", &ok);
@@ -268,7 +235,7 @@ void MainWindow::findText() {
         bool found = false;
 
         // Используем регулярное выражение для поиска
-        QRegExp regExp(searchText, Qt::CaseInsensitive, QRegExp::Wildcard);
+        QRegularExpression regExp(searchText, QRegularExpression::CaseInsensitiveOption);
         textEdit->moveCursor(QTextCursor::Start);  // Начинаем поиск с начала текста
 
         while (textEdit->find(regExp, options)) {
@@ -291,6 +258,7 @@ void MainWindow::replaceText() {
             QString content = textEdit->toPlainText();
             content.replace(searchText, replaceText);
             textEdit->setPlainText(content);
+            textEdit->setTextColor(Qt::black); // Устанавливаем черный цвет текста при создании нового документа
             isTextChanged = true;
         }
     }
@@ -398,7 +366,7 @@ void MainWindow::openFile(const QString &fileName) {
 void MainWindow::saveSettings() {
     QSettings settings("MyCompany", "MyApp"); // Замените MyCompany и MyApp на свои значения
     settings.setValue("fontSize", textEdit->fontPointSize());
-    settings.setValue("backgroundColor", textEdit->palette().color(QPalette::Background).name());
+    settings.setValue("backgroundColor", textEdit->palette().color(QPalette::Window).name());
     settings.setValue("lastFilePath", currentFilePath);
 }
 
