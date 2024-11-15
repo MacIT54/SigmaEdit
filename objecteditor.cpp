@@ -74,7 +74,6 @@ void customgraphicsview::drawAt(const QPoint &position) {
         brushSize
         );
 
-    // Устанавливаем стиль кисти
     QBrush brush(brushColor, brushStyle);
     ellipse->setBrush(brush);
     ellipse->setPen(Qt::NoPen);
@@ -84,6 +83,6 @@ void customgraphicsview::drawAt(const QPoint &position) {
 void customgraphicsview::resizeEvent(QResizeEvent *event) {
     QGraphicsView::resizeEvent(event);
     if (scene()) {
-        scene()->setSceneRect(rect()); // Set the scene rect to match the view's rect
+        scene()->setSceneRect(rect());
     }
 }
