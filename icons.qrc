@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/icons"/>
+    <qresource prefix="/">
+        <file>icons/floppy-disk.png</file>
+        <file>icons/art-and-design.png</file>
+        <file>icons/button.png</file>
+        <file>icons/delete.png</file>
+        <file>icons/minus.png</file>
+        <file>icons/note.png</file>
+        <file>icons/paint-brush.png</file>
+        <file>icons/rectangle.png</file>
+        <file>icons/save.png</file>
+        <file>icons/triangle.png</file>
+        <file>icons/eraser.png</file>
+        <file>sounds/am-am-am.mp3</file>
+        <file>sounds/am-am-am.wav</file>
+    </qresource>
+    <qresource prefix="/sounds"/>
+</RCC>

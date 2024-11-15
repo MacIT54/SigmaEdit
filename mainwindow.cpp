@@ -17,6 +17,7 @@
 #include <QColorDialog>
 #include <QPushButton>
 #include <QSettings>
+#include "graphiceditor.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -37,6 +38,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QMenuBar *menuBar = new QMenuBar(this);
     QMenu *fileMenu = new QMenu("Файл", this);
     QMenu *editMenu = new QMenu("Правка", this);
+
+    connect(ui->openGraphicsEditorAction, &QAction::triggered, this, &MainWindow::openGraphicEditor);
+
+
+
 
     QAction *openRtfAction = new QAction("Открыть .rtf", this);
     openRtfAction->setShortcut(QKeySequence::Open);  // Горячая клавиша Ctrl+O
@@ -133,6 +139,12 @@ MainWindow::~MainWindow() {
     saveSettings();  // Сохранить настройки перед закрытием
     delete ui;
 }
+
+void MainWindow::openGraphicEditor() {
+    graphiceditor *graphicEditorWindow = new graphiceditor(this);
+    graphicEditorWindow->show();
+}
+
 
 void MainWindow::insertTable() {
     bool ok;

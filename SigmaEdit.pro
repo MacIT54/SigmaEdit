@@ -16,6 +16,8 @@ TEMPLATE = app
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+QT += multimedia
+
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -25,14 +27,43 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        bird.cpp \
+        circle.cpp \
+        graphiceditor.cpp \
+        ledinletters.cpp \
+        line.cpp \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        movabletextitem.cpp \
+        mrikhletters.cpp \
+        objectclass.cpp \
+        objecteditor.cpp \
+        phone.cpp \
+        rectangle.cpp \
+        shape.cpp \
+        triangle.cpp
 
 HEADERS += \
-        mainwindow.h
+        bird.h \
+        circle.h \
+        graphiceditor.h \
+        ledinletters.h \
+        line.h \
+        mainwindow.h \
+        movabletextitem.h \
+        mrikhletters.h \
+        objectclass.h \
+        objecteditor.h \
+        phone.h \
+        rectangle.h \
+        shape.h \
+        triangle.h
 
 FORMS += \
         mainwindow.ui
+
+RESOURCES += icons.qrc \
+    icons.qrc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

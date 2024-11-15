@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QSettings>  // Добавлено для работы с настройками
+#include "graphiceditor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,6 +28,8 @@ private slots:
     void undoText();
     void copyText();
     void pasteText();
+
+    void openGraphicEditor();  // Новый слот для открытия GraphicEditor
 
     void saveTempFile();
     void restoreFromTempFile();
@@ -57,6 +60,8 @@ private:
 
     QString currentFilePath;
     QString tempFilePath;
+
+    //graphiceditor *graphicEditor;
 };
 
 
