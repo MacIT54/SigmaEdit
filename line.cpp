@@ -16,12 +16,11 @@ line::line(qreal length, qreal angle, const QPen &borderColor)
 }
 
 QRectF line::boundingRect() const {
-    qreal extra = 5; // Дополнительное пространство вокруг линии для захвата
+    qreal extra = 5;
     return QRectF(-extra, -extra, length + extra * 2, extra * 2);
 }
 
 void line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    // Не рисуем, если линия в режиме перемещения
     if (isMoving) {
         return;
     }
@@ -38,23 +37,20 @@ QVariant line::itemChange(GraphicsItemChange change, const QVariant &value) {
     return QGraphicsItem::itemChange(change, value);
 }
 
-// Обработка нажатия правой кнопки мыши
 void line::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         if (scene() && !scene()->views().isEmpty()) {
             scene()->views().first()->setCursor(Qt::OpenHandCursor);
         }
         event->accept();
-        isMoving = true; // Устанавливаем режим перемещения
+        isMoving = true;
     } else {
         QGraphicsItem::mousePressEvent(event);
     }
 }
 
-// Обработка движения мыши
 void line::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if (event->buttons() & Qt::RightButton) {
-        // Перемещение линии
         moveBy(event->pos().x() - event->lastPos().x(), event->pos().y() - event->lastPos().y());
         event->accept();
     } else {
@@ -62,14 +58,13 @@ void line::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     }
 }
 
-// Обработка отпускания кнопки мыши
 void line::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         if (scene() && !scene()->views().isEmpty()) {
             scene()->views().first()->setCursor(Qt::ArrowCursor);
         }
-        isMoving = false; // Выход из режима перемещения
-        update(); // Обновляем линию для перерисовки
+        isMoving = false;
+        update();
         event->accept();
     } else {
         QGraphicsItem::mouseReleaseEvent(event);
